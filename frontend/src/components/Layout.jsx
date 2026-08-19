@@ -19,7 +19,7 @@ export default function Layout() {
     <>
       <header className="site-header">
         <Link className="brand" to="/">
-          Santa Media
+          Santa Browser
         </Link>
 
         {user && (

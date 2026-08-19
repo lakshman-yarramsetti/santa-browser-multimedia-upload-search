@@ -158,7 +158,7 @@ export default function AuthPage({ mode }) {
 
   return (
     <section className="auth-card">
-      <h1>{isRegister ? 'Create your account' : 'Welcome back'}</h1>
+      <h1>{isRegister ? 'Create your account' : 'Welcome to Santa Browser'}</h1>
 
       <p>Manage and search your own multimedia library.</p>
 

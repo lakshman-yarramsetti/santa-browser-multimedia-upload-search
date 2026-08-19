@@ -7,24 +7,14 @@ export const searchMedia = createAsyncThunk(
     try {
       return (await api.get('/media/search', { params: { query } })).data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Search failed.'
-      );
+      return rejectWithValue(error.response?.data?.message || 'Search failed.');
     }
   }
 );
 
 const searchSlice = createSlice({
   name: 'search',
-
-  initialState: {
-    query: '',
-    results: [],
-    status: 'idle',
-    error: null,
-    hasSearched: false,
-  },
-
+  initialState: { query: '', results: [], status: 'idle', error: null, hasSearched: false },
   reducers: {
     clearSearch: (state) => {
       state.query = '';
@@ -33,29 +23,16 @@ const searchSlice = createSlice({
       state.hasSearched = false;
       state.status = 'idle';
     },
+    updateSearchResult: (state, action) => {
+      const index = state.results.findIndex((item) => item._id === action.payload._id);
+      if (index !== -1) state.results[index] = { ...state.results[index], ...action.payload };
+    },
   },
-
-  extraReducers: (builder) =>
-    builder
-      .addCase(searchMedia.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
-      })
-
-      .addCase(searchMedia.fulfilled, (state, action) => {
-        state.status = 'idle';
-        state.query = action.payload.query;
-        state.results = action.payload.media;
-        state.hasSearched = true;
-      })
-
-      .addCase(searchMedia.rejected, (state, action) => {
-        state.status = 'idle';
-        state.error = action.payload;
-        state.hasSearched = true;
-      }),
+  extraReducers: (builder) => builder
+    .addCase(searchMedia.pending, (state) => { state.status = 'loading'; state.error = null; })
+    .addCase(searchMedia.fulfilled, (state, action) => { state.status = 'idle'; state.query = action.payload.query; state.results = action.payload.media; state.hasSearched = true; })
+    .addCase(searchMedia.rejected, (state, action) => { state.status = 'idle'; state.error = action.payload; state.hasSearched = true; }),
 });
 
-export const { clearSearch } = searchSlice.actions;
-
+export const { clearSearch, updateSearchResult } = searchSlice.actions;
 export default searchSlice.reducer;
