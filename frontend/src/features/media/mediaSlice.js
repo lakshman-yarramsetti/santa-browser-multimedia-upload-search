@@ -7,16 +7,6 @@ const messageOf = (error) => {
   return 'Something went wrong. Please try again later.';
 };
 
-async function prepareUploadFile(file) {
-  if (file.type !== 'application/pdf') return file;
-
-  const bytes = await file.arrayBuffer();
-
-  return new File([bytes], file.name, {
-    type: file.type,
-    lastModified: file.lastModified,
-  });
-}
 
 export const fetchLibrary = createAsyncThunk('media/list', async (_, { rejectWithValue }) => { try { return (await api.get('/media')).data.media; } catch (error) { return rejectWithValue(messageOf(error)); } });
 export const uploadMedia = createAsyncThunk('media/upload', async ({ file, tags }, { rejectWithValue }) => {
@@ -30,9 +20,8 @@ export const uploadMedia = createAsyncThunk('media/upload', async ({ file, tags 
       fileSize: file?.size,
     });
 
-    const uploadFile = await prepareUploadFile(file);
     const body = new FormData();
-    body.append('file', uploadFile);
+    body.append('file', file);
     body.append('tags', tags);
 
     console.info('[upload-debug] FormData created', { debugUploadId });
