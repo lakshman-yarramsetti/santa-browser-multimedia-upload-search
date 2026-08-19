@@ -29,6 +29,7 @@ export const uploadMedia = createAsyncThunk('media/upload', async ({ file, tags 
 
     const response = await api.post('/media/upload', body, {
       headers: { 'X-Debug-Upload-ID': debugUploadId },
+      adapter: 'fetch',
     });
 
     console.info('[upload-debug] request fulfilled', {
