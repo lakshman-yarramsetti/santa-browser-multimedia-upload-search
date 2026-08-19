@@ -19,6 +19,7 @@ const allowed = [
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
+  const [isPreparingFile, setIsPreparingFile] = useState(false);
   const [tags, setTags] = useState('');
   const [localError, setLocalError] = useState('');
 
@@ -40,6 +41,10 @@ export default function UploadPage() {
 
     if (file.size > 25 * 1024 * 1024) {
       return setLocalError('Files must be 25 MB or smaller.');
+    }
+
+    if (isPreparingFile) {
+      return setLocalError('Your file is still being prepared.');
     }
 
     const result = await dispatch(
@@ -71,9 +76,39 @@ export default function UploadPage() {
             type="file"
             required
             accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,audio/mpeg,audio/wav,audio/ogg,application/pdf"
-            onChange={(e) => {
-              setFile(e.target.files[0]);
+            onChange={async (e) => {
+              const selectedFile = e.target.files?.[0];
+
               setLocalError('');
+              setFile(null);
+
+              if (!selectedFile) return;
+
+              if (selectedFile.size > 25 * 1024 * 1024) {
+                setLocalError('Files must be 25 MB or smaller.');
+                return;
+              }
+
+              if (selectedFile.type !== 'application/pdf') {
+                setFile(selectedFile);
+                return;
+              }
+
+              setIsPreparingFile(true);
+
+              try {
+                const bytes = await selectedFile.arrayBuffer();
+                setFile(
+                  new File([bytes], selectedFile.name, {
+                    type: selectedFile.type,
+                    lastModified: selectedFile.lastModified,
+                  })
+                );
+              } catch {
+                setLocalError('The selected PDF could not be read. Please select it again.');
+              } finally {
+                setIsPreparingFile(false);
+              }
             }}
           />
         </label>
@@ -102,8 +137,12 @@ export default function UploadPage() {
           <p className="error">{localError || error}</p>
         )}
 
-        <button disabled={status === 'loading'}>
-          {status === 'loading' ? 'Uploading…' : 'Upload file'}
+        <button disabled={status === 'loading' || isPreparingFile}>
+          {status === 'loading'
+            ? 'Uploading…'
+            : isPreparingFile
+              ? 'Preparing file…'
+              : 'Upload file'}
         </button>
       </form>
     </section>
