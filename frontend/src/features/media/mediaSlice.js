@@ -8,7 +8,46 @@ const messageOf = (error) => {
 };
 
 export const fetchLibrary = createAsyncThunk('media/list', async (_, { rejectWithValue }) => { try { return (await api.get('/media')).data.media; } catch (error) { return rejectWithValue(messageOf(error)); } });
-export const uploadMedia = createAsyncThunk('media/upload', async ({ file, tags }, { rejectWithValue }) => { try { const body = new FormData(); body.append('file', file); body.append('tags', tags); return (await api.post('/media/upload', body)).data.media; } catch (error) { return rejectWithValue(messageOf(error)); } });
+export const uploadMedia = createAsyncThunk('media/upload', async ({ file, tags }, { rejectWithValue }) => {
+  const debugUploadId = `upload-debug-${Date.now()}`;
+
+  try {
+    console.info('[upload-debug] upload function started', {
+      debugUploadId,
+      fileName: file?.name,
+      fileType: file?.type,
+      fileSize: file?.size,
+    });
+
+    const body = new FormData();
+    body.append('file', file);
+    body.append('tags', tags);
+
+    console.info('[upload-debug] FormData created', { debugUploadId });
+    console.info('[upload-debug] request started', { debugUploadId });
+
+    const response = await api.post('/media/upload', body, {
+      headers: { 'X-Debug-Upload-ID': debugUploadId },
+    });
+
+    console.info('[upload-debug] request fulfilled', {
+      debugUploadId,
+      status: response.status,
+    });
+
+    return response.data.media;
+  } catch (error) {
+    console.info('[upload-debug] request failed', {
+      debugUploadId,
+      message: error.message,
+      code: error.code,
+      hasRequest: Boolean(error.request),
+      status: error.response?.status,
+    });
+
+    return rejectWithValue(messageOf(error));
+  }
+});
 export const fetchMedia = createAsyncThunk('media/detail', async (id, { rejectWithValue }) => { try { return (await api.get(`/media/${id}`)).data.media; } catch (error) { return rejectWithValue(messageOf(error)); } });
 export const recordView = createAsyncThunk('media/view', async (id, { rejectWithValue }) => { try { return (await api.post(`/media/${id}/view`)).data.media; } catch (error) { return rejectWithValue(messageOf(error)); } });
 
